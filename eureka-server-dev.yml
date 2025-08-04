@@ -1,0 +1,10 @@
+eureka:
+  server:
+    enable-self-preservation: false  # Disable in dev for faster testing
+    eviction-interval-timer-in-ms: 5000
+
+logging:
+  level:
+    com.netflix.eureka: DEBUG
+    com.netflix.discovery: DEBUG
+    org.springframework.cloud: DEBUG

@@ -1,0 +1,170 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            # User Service Routes (with API versioning)
+            - id: user-service
+              uri: lb://user-service
+              predicates:
+                - Path=/api/v1/users/**
+              filters:
+                - RewritePath=/api/v1/users/(?<segment>.*), /api/users/${segment}
+                - name: CircuitBreaker
+                  args:
+                    name: user-service-cb
+                    fallbackUri: forward:/fallback/users
+
+            # Payment Service Routes (with API versioning)
+            - id: payment-service
+              uri: lb://payment-service
+              predicates:
+                - Path=/api/v1/payments/**
+              filters:
+                - RewritePath=/api/v1/payments/(?<segment>.*), /api/payments/${segment}
+                - name: CircuitBreaker
+                  args:
+                    name: payment-service-cb
+                    fallbackUri: forward:/fallback/payments
+
+            # Auth Service Routes (with API versioning)
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/v1/auth/**
+              filters:
+                - RewritePath=/api/v1/auth/(?<segment>.*), /api/auth/${segment}
+
+            # Auth Service Swagger Routes
+            - id: auth-service-swagger-docs
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth/v3/api-docs
+              filters:
+                - RewritePath=/auth/v3/api-docs, /v3/api-docs
+
+            - id: auth-service-swagger-ui
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth/swagger-ui/**
+              filters:
+                - RewritePath=/auth/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+
+            - id: auth-service-swagger-resources
+              uri: lb://auth-service
+              predicates:
+                - Path=/auth/swagger-resources/**
+              filters:
+                - RewritePath=/auth/swagger-resources/(?<segment>.*), /swagger-resources/$\{segment}
+
+            # Payment Service Swagger Routes
+            - id: payment-service-swagger-docs
+              uri: lb://payment-service
+              predicates:
+                - Path=/payments/v3/api-docs
+              filters:
+                - RewritePath=/payments/v3/api-docs, /v3/api-docs
+
+            - id: payment-service-swagger-ui
+              uri: lb://payment-service
+              predicates:
+                - Path=/payments/swagger-ui/**
+              filters:
+                - RewritePath=/payments/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+
+            - id: payment-service-swagger-resources
+              uri: lb://payment-service
+              predicates:
+                - Path=/payments/swagger-resources/**
+              filters:
+                - RewritePath=/payments/swagger-resources/(?<segment>.*), /swagger-resources/$\{segment}
+
+            # User Service Swagger Routes
+            - id: user-service-swagger-docs
+              uri: lb://user-service
+              predicates:
+                - Path=/users/v3/api-docs
+              filters:
+                - RewritePath=/users/v3/api-docs, /v3/api-docs
+
+            - id: user-service-swagger-ui
+              uri: lb://user-service
+              predicates:
+                - Path=/users/swagger-ui/**
+              filters:
+                - RewritePath=/users/swagger-ui/(?<segment>.*), /swagger-ui/$\{segment}
+
+            - id: user-service-swagger-resources
+              uri: lb://user-service
+              predicates:
+                - Path=/users/swagger-resources/**
+              filters:
+                - RewritePath=/users/swagger-resources/(?<segment>.*), /swagger-resources/$\{segment}
+
+# JWT Configuration (must match auth-service)
+jwt:
+  secret: mySecretKey123456789012345678901234567890123456789012345678901234567890
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 30
+
+# Circuit Breaker Configuration
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      user-service-cb:
+        base-config: default
+      payment-service-cb:
+        base-config: default
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+
+# Swagger Configuration for Gateway
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - name: API Gateway
+        url: /v3/api-docs
+      - name: Auth Service
+        url: /auth/v3/api-docs
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+
+# Logging
+logging:
+  level:
+    com.example.apigateway: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO

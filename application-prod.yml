@@ -1,0 +1,7 @@
+welcome:
+  message: "Hello from PRODUCTION environment!"
+
+logging:
+  level:
+    root: WARN
+    com.example: INFO

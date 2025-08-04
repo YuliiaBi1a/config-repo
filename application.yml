@@ -1,0 +1,17 @@
+# Global configuration for all services
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud: DEBUG
+    com.example: INFO
+
+welcome:
+  message: "Hello from Config Server!"

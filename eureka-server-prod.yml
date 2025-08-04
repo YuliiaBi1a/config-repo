@@ -1,0 +1,15 @@
+eureka:
+  server:
+    enable-self-preservation: true
+    expected-client-renewal-interval-seconds: 30
+    
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics  # Reduced exposure in prod
+
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN

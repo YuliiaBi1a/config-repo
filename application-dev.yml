@@ -1,0 +1,12 @@
+welcome:
+  message: "Hello from DEV environment!"
+
+logging:
+  level:
+    root: DEBUG
+    com.example: DEBUG
+
+spring:
+  h2:
+    console:
+      enabled: true
